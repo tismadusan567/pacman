@@ -18,10 +18,11 @@
 #define SMALLWALL 14.0f
 
 char grid[WINDOW_WIDTH/TILE_SIZE][WINDOW_HEIGHT/TILE_SIZE] = {0};
+bool boolGrid[28][36];
 
 std::vector<Wall> setWalls(sf::Texture* texture);
 std::vector<Dot> setDots(sf::Texture* texture);
-void setGrid();
+void setGrids();
 
 int main()
 {
@@ -53,8 +54,8 @@ int main()
     score.setFillColor(sf::Color::White);
 
     //objects
-    setGrid(); 
-    Player player(280.0f, &PacmanTexture, &PacmanTextureClosed);
+    setGrids(); 
+    Player player(280.0f, &PacmanTexture, &PacmanTextureClosed, boolGrid);
     Ghost redGhost(280.0f,sf::Vector2f((float)WINDOW_HEIGHT/2.0f, 18.0f*(float)TILE_SIZE), &redGhostTexture, &redGhostTexture);
     std::vector<Wall> walls=setWalls(&wallTexture);
     std::vector<Dot> dots=setDots(&dotTexture); 
@@ -130,7 +131,7 @@ int main()
 
         window.clear();
         player.Draw(window);
-        std::cout << player.getPosition().x << " " << player.getPosition().y << std::endl;//
+        //std::cout << player.getPosition().x << " " << player.getPosition().y << std::endl;//
         for(int i=0;i<walls.size();i++){
             walls[i].Draw(window);
         }
@@ -231,12 +232,18 @@ std::vector<Wall> setWalls(sf::Texture* texture)
     return v;
 }
 
-void setGrid()
+void setGrids()
 {
     std::ifstream in("gridAll");
     for(int y=0;y<WINDOW_HEIGHT/TILE_SIZE;y++){
         for(int x=0;x<WINDOW_WIDTH/TILE_SIZE;x++){
             in >> grid[x][y];
+        }
+    }
+    std::ifstream in2("boolGrid");
+    for(int y=0;y<36;y++){
+        for(int x=0;x<28;x++){
+            in2 >> boolGrid[x][y];
         }
     }
 }
