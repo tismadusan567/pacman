@@ -1,16 +1,17 @@
 #include <SFML/Graphics.hpp>
 #include "player.h"
 
-Player::Player(float speed, sf::Texture* texture, sf::Texture* texture2, bool boolGrid[28][36])
+Player::Player(float speed, bool boolGrid[28][36])
 {
     this->speed = speed;
-    this->texture = texture;
-    this->texture2 = texture2;
+    
     for(int y=0;y<36;y++){
         for(int x=0;x<28;x++){
             this->boolGrid[x][y] = boolGrid[x][y];
         }
     }
+    texture.loadFromFile("pacmanRight.png");
+    texture2.loadFromFile("pacmanClosed.png");
 
     nextDirection = 's';
     isClosed = false;
@@ -20,7 +21,7 @@ Player::Player(float speed, sf::Texture* texture, sf::Texture* texture2, bool bo
     body.setSize(sf::Vector2f(49.0f, 49.0f));
     body.setOrigin(body.getSize().x/2.0, body.getSize().y/2.0);
     body.setPosition(392.0f, 742.0f);
-    body.setTexture(texture);
+    body.setTexture(&texture);
 }
 
 Player::~Player()
@@ -33,11 +34,11 @@ void Player::Update(sf::RenderWindow& window, float deltaTime, float& counter)
     if(counter>0.1f){
             counter=0.0f;
             if(isClosed){
-                body.setTexture(texture);
+                body.setTexture(&texture);
                 isClosed = false;
             }
             else{
-                body.setTexture(texture2);
+                body.setTexture(&texture2);
                 isClosed = true;
             }
         }

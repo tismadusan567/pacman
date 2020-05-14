@@ -5,7 +5,7 @@
 class Player
 {
 public:
-    Player(float speed, sf::Texture* texture, sf::Texture* texture2, bool boolGrid[28][36]);
+    Player(float speed, bool boolGrid[28][36]);
     ~Player();
     void Update(sf::RenderWindow& window, float deltaTime, float& counter);
     void Draw(sf::RenderWindow& window);
@@ -20,5 +20,5 @@ private:
     float speed;
     bool isClosed;
     bool boolGrid[28][36];
-    sf::Texture *texture, *texture2;
+    sf::Texture texture, texture2;
 };

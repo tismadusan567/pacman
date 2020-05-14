@@ -36,12 +36,9 @@ int main()
     window.setView(view);
 
     //textures
-    sf::Texture dotTexture, PacmanTexture, PacmanTextureClosed, wallTexture, redGhostTexture;
+    sf::Texture dotTexture, wallTexture;
     dotTexture.loadFromFile("pacmanClosed.png");
-    PacmanTexture.loadFromFile("pacmanRight.png");
-    PacmanTextureClosed.loadFromFile("pacmanClosed.png");
     wallTexture.loadFromFile("space.jpg");
-    redGhostTexture.loadFromFile("red ghost.png");
 
     //font
     sf::Font font;
@@ -55,8 +52,8 @@ int main()
 
     //objects
     setGrids(); 
-    Player player(280.0f, &PacmanTexture, &PacmanTextureClosed, boolGrid);
-    Ghost redGhost(280.0f,sf::Vector2f((float)WINDOW_HEIGHT/2.0f, 18.0f*(float)TILE_SIZE), &redGhostTexture, &redGhostTexture);
+    Player player(280.0f, boolGrid);
+    Ghost redGhost(224.0f,sf::Vector2f((float)WINDOW_HEIGHT/2.0f, 18.0f*(float)TILE_SIZE), boolGrid);
     std::vector<Wall> walls=setWalls(&wallTexture);
     std::vector<Dot> dots=setDots(&dotTexture); 
 

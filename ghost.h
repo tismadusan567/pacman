@@ -5,7 +5,7 @@
 class Ghost
 {
 public:
-    Ghost(float speed, sf::Vector2f position, sf::Texture* texture, sf::Texture* texture2);
+    Ghost(float speed, sf::Vector2f position, bool boolGrid[28][36]);
     ~Ghost();
     void Update(sf::RenderWindow& window, float deltaTime, float& counter);
     void Draw(sf::RenderWindow& window);
@@ -13,11 +13,14 @@ public:
     sf::Vector2f getPosition();
     sf::Vector2f getSize();
     Collider getCollider();
+    std::vector<sf::Vector2i> bfs(sf::Vector2i start, sf::Vector2i target);
 private:
+    bool boolGrid[28][36];
     int randDirection;
     sf::Vector2f movement;
     sf::RectangleShape body;
     float speed;
     int animationNum;
-    sf::Texture *texture, *texture2;
+    sf::Texture texture, texture2;
+    sf::Vector2i nextTile;
 };
