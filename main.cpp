@@ -37,8 +37,8 @@ int main()
 
     //textures
     sf::Texture dotTexture, wallTexture;
-    dotTexture.loadFromFile("pacmanClosed.png");
-    wallTexture.loadFromFile("space.jpg");
+    dotTexture.loadFromFile("textures/pacmanClosed.png");
+    wallTexture.loadFromFile("textures/space.jpg");
 
     //font
     sf::Font font;
@@ -53,7 +53,10 @@ int main()
     //objects
     setGrids(); 
     Player player(280.0f, boolGrid);
-    Ghost redGhost(224.0f,sf::Vector2f((float)WINDOW_HEIGHT/2.0f, 18.0f*(float)TILE_SIZE), boolGrid);
+    Ghost redGhost(224.0f,sf::Vector2f(18.5f*(float)TILE_SIZE, 18.5f*(float)TILE_SIZE),"redGhost", boolGrid);
+    Ghost orangeGhost(224.0f,sf::Vector2f(4.5f*(float)TILE_SIZE, 4.5f*(float)TILE_SIZE),"orangeGhost", boolGrid);
+    Ghost yellowGhost(224.0f,sf::Vector2f(26.5f*(float)TILE_SIZE, 26.5f*(float)TILE_SIZE),"yellowGhost", boolGrid);
+    Ghost greenGhost(224.0f,sf::Vector2f(1.5f*(float)TILE_SIZE, 32.5f*(float)TILE_SIZE),"greenGhost", boolGrid);
     std::vector<Wall> walls=setWalls(&wallTexture);
     std::vector<Dot> dots=setDots(&dotTexture); 
 
@@ -101,17 +104,25 @@ int main()
         //update / draw / display
         playerCounter+=deltaTime;
         ghostCounter+=deltaTime;
-        redGhost.setDirection(rand()%4);
         player.Update(window, deltaTime, playerCounter); //update player
-        redGhost.Update(window, deltaTime, ghostCounter);
+        redGhost.Update(window, deltaTime, ghostCounter, player.getPosition());
+        orangeGhost.Update(window, deltaTime, ghostCounter, player.getPosition());
+        yellowGhost.Update(window, deltaTime, ghostCounter, player.getPosition());
+        greenGhost.Update(window, deltaTime, ghostCounter, player.getPosition());
 
         Collider playerCollider = player.getCollider();
         for(int i=0;i<walls.size();i++){
             walls[i].getCollider().checkCollision(playerCollider, 1.0f);
         }
         Collider redGhostCollider = redGhost.getCollider();
+        Collider orangeGhostCollider = orangeGhost.getCollider();
+        Collider yellowGhostCollider = yellowGhost.getCollider();
+        Collider greenGhostCollider = greenGhost.getCollider();
         for(int i=0;i<walls.size();i++){
             walls[i].getCollider().checkCollision(redGhostCollider, 1.0f);
+            walls[i].getCollider().checkCollision(orangeGhostCollider, 1.0f);
+            walls[i].getCollider().checkCollision(yellowGhostCollider, 1.0f);
+            walls[i].getCollider().checkCollision(greenGhostCollider, 1.0f);
         }
 
         for(int i=0;i<dots.size();i++){ //update dots
@@ -136,6 +147,9 @@ int main()
             if(dots[i].getActive())dots[i].Draw(window);
         }
         redGhost.Draw(window);
+        orangeGhost.Draw(window);
+        yellowGhost.Draw(window);
+        greenGhost.Draw(window);
         window.draw(score);
         window.display();
     }
@@ -166,9 +180,12 @@ std::vector<Wall> setWalls(sf::Texture* texture)
     std::vector<Wall> v;
 
     //unutrasnji zidovi
-    for(int x=0;x<WINDOW_WIDTH;x+=TILE_SIZE){
-        for(int y=0;y<WINDOW_HEIGHT;y+=TILE_SIZE){
-            if(grid[x/TILE_SIZE][y/TILE_SIZE]=='S'){
+    for(int x=0;x<WINDOW_WIDTH;x+=TILE_SIZE)
+    {
+        for(int y=0;y<WINDOW_HEIGHT;y+=TILE_SIZE)
+        {
+            if(grid[x/TILE_SIZE][y/TILE_SIZE]=='S')
+            {
                 sf::Vector2f size(0.0f, 0.0f), position;
                 for(int i=x+TILE_SIZE;grid[i/TILE_SIZE][y/TILE_SIZE]=='W' || grid[i/TILE_SIZE][y/TILE_SIZE]=='E';i+=TILE_SIZE)
                 {
@@ -232,14 +249,18 @@ std::vector<Wall> setWalls(sf::Texture* texture)
 void setGrids()
 {
     std::ifstream in("gridAll");
-    for(int y=0;y<WINDOW_HEIGHT/TILE_SIZE;y++){
-        for(int x=0;x<WINDOW_WIDTH/TILE_SIZE;x++){
+    for(int y=0;y<WINDOW_HEIGHT/TILE_SIZE;y++)
+    {
+        for(int x=0;x<WINDOW_WIDTH/TILE_SIZE;x++)
+        {
             in >> grid[x][y];
         }
     }
     std::ifstream in2("boolGrid");
-    for(int y=0;y<36;y++){
-        for(int x=0;x<28;x++){
+    for(int y=0;y<36;y++)
+    {
+        for(int x=0;x<28;x++)
+        {
             in2 >> boolGrid[x][y];
         }
     }

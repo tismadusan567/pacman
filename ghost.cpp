@@ -4,22 +4,26 @@
 #include <iostream> //ovo izbrisi posle
 #include "ghost.h"
 
-Ghost::Ghost(float speed,sf::Vector2f position, bool boolGrid[28][36])
+Ghost::Ghost(float speed,sf::Vector2f position, const std::string& color, bool boolGrid[28][36])
 {
     this->speed = speed;
     animationNum = 0;
     movement.x = 0.0f;
     movement.y = 0.0f;
-    for(int y=0;y<36;y++){
-        for(int x=0;x<28;x++){
+    for(int y=0;y<36;y++)
+    {
+        for(int x=0;x<28;x++)
+        {
             this->boolGrid[x][y] = boolGrid[x][y];
         }
     }
 
-    nextTile.x = 19;
-    nextTile.y = 20;
-    texture.loadFromFile("red ghost.png");
-    texture2.loadFromFile("red ghost.png");
+    nextTile.x = -1;
+    nextTile.y = -1;
+    // nextTile.x = (int)position.x / 28 + 1;
+    // nextTile.y = (int)position.x / 28 + 1;
+    texture.loadFromFile("textures/" + color);
+    texture2.loadFromFile("textures/" + color);
     body.setSize(sf::Vector2f(49.0f, 49.0f));
     body.setOrigin(body.getSize().x/2.0, body.getSize().y/2.0);
     body.setPosition(position);
@@ -31,67 +35,65 @@ Ghost::~Ghost()
 
 }
 
-void Ghost::Update(sf::RenderWindow& window, float deltaTime, float& counter)
+void Ghost::Update(sf::RenderWindow& window, float deltaTime, float& counter, sf::Vector2f pacmanPosition)
 {
-    if(counter>0.1f){
+    if(counter>0.1f)
+    {
             counter=0.0f;
-            if(animationNum == 0){
+            if(animationNum == 0)
+            {
                 body.setTexture(&texture);
                 animationNum++;
             }
-            else{
+            else
+            {
                 body.setTexture(&texture2);
                 animationNum = 0;
             }
-        }    
+    }    
     
-    int currentTileX = (int)body.getPosition().x / 28 ;
-    int currentTileY = (int)body.getPosition().y / 28 ;
+    int currentTileX = (int)body.getPosition().x / 28 + 1;
+    int currentTileY = (int)body.getPosition().y / 28 + 1;
 
-    if(body.getPosition().x > nextTile.x *28.0f - 0.58*28.0f && body.getPosition().x < nextTile.x *28.0f - 0.42*28.0f){
-        if(body.getPosition().y < nextTile.y *28.0f - 0.58f*28.0f)
-        {
-            movement.x = 0.0f;
-            movement.y = speed*deltaTime;
-        }
-        else if (body.getPosition().y > nextTile.y*28.0f - 0.42f*28.0f)
-        {
-            movement.x = 0.0f;
-            movement.y = -speed*deltaTime;
-        }
-        else
-        {
-            sf::Vector2i current(currentTileX+1,currentTileY+1);
-            sf::Vector2i target(27,5);
 
-            nextTile = bfs(current, target).at(1);
-            std::cout << nextTile.x << " " << nextTile.y << std::endl;
-        }
-    }
-    else
+    if(nextTile.x == -1 || nextTile.y == -1 || body.getPosition().x > nextTile.x*28.0f - 0.58*28.0f && body.getPosition().x < nextTile.x*28.0f - 0.42*28.0f && body.getPosition().y > nextTile.y*28.0f - 0.58f*28.0f && body.getPosition().y < nextTile.y*28.0f - 0.42f*28.0f)
     {
-        if(body.getPosition().x < nextTile.x *28.0f - 0.58*28.0f)
+        sf::Vector2i current(currentTileX,currentTileY);
+            sf::Vector2i target;
+            target.x = (int)pacmanPosition.x / 28 + 1;
+            target.y = (int)pacmanPosition.y / 28 + 1;
+
+            std::vector<sf::Vector2i> path = bfs(current, target);
+            if(path.size() > 1)
+            {
+            nextTile = path.at(1);
+            }
+            //std::cout << nextTile.x << " " << nextTile.y << std::endl;
+    }
+
+    if(body.getPosition().x < nextTile.x*28.0f - 0.58*28.0f)
         {
             movement.x = speed*deltaTime;
             movement.y = 0.0f;
         }
-        else if (body.getPosition().x > nextTile.x*28.0f - 0.42*28.0f)
+    else if (body.getPosition().x > nextTile.x*28.0f - 0.42*28.0f)
         {
             movement.x = -speed*deltaTime;
             movement.y = 0.0f;
         }
-        else
+    else if(body.getPosition().y < nextTile.y*28.0f - 0.58f*28.0f)
         {
-            sf::Vector2i current(currentTileX+1,currentTileY+1);
-            sf::Vector2i target(27,5);
-
-            nextTile = bfs(current, target).at(1);
-            std::cout << nextTile.x << " " << nextTile.y << std::endl;
+            movement.x = 0.0f;
+            movement.y = speed*deltaTime;
         }
-    }
+    else if (body.getPosition().y > nextTile.y*28.0f - 0.42f*28.0f)
+        {
+            movement.x = 0.0f;
+            movement.y = -speed*deltaTime;
+        }
     
     body.move(movement.x, movement.y);
-    std::cout << movement.x << " " << movement.y << " " << body.getPosition().x << " " << body.getPosition().y << std::endl;
+    //std::cout << movement.x << " " << movement.y << " " << body.getPosition().x << " " << body.getPosition().y << std::endl;
 
     if(body.getPosition().x>window.getSize().x+body.getSize().x/2.0f){
         body.setPosition(-body.getSize().x/2.0f, body.getPosition().y);
@@ -105,11 +107,6 @@ void Ghost::Update(sf::RenderWindow& window, float deltaTime, float& counter)
 void Ghost::Draw(sf::RenderWindow& window)
 {
     window.draw(body);
-}
-
-void Ghost::setDirection(int randDirection)
-{
-    this->randDirection=randDirection;
 }
 
 sf::Vector2f Ghost::getPosition()
@@ -142,7 +139,6 @@ std::vector<sf::Vector2i> Ghost::bfs(sf::Vector2i start, sf::Vector2i target)
     boolGridCopy[start.x][start.y] = 0;
     while(!q.empty())
     {
-        std::cout << 1 << std::flush;
         sf::Vector2i current = q.front().first;
         std::vector<sf::Vector2i> path = q.front().second;
         q.pop();

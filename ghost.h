@@ -5,18 +5,16 @@
 class Ghost
 {
 public:
-    Ghost(float speed, sf::Vector2f position, bool boolGrid[28][36]);
+    Ghost(float speed, sf::Vector2f position,const std::string& color, bool boolGrid[28][36]);
     ~Ghost();
-    void Update(sf::RenderWindow& window, float deltaTime, float& counter);
+    void Update(sf::RenderWindow& window, float deltaTime, float& counter, sf::Vector2f pacmanPosition);
     void Draw(sf::RenderWindow& window);
-    void setDirection(int randDirection);
     sf::Vector2f getPosition();
     sf::Vector2f getSize();
     Collider getCollider();
     std::vector<sf::Vector2i> bfs(sf::Vector2i start, sf::Vector2i target);
 private:
     bool boolGrid[28][36];
-    int randDirection;
     sf::Vector2f movement;
     sf::RectangleShape body;
     float speed;

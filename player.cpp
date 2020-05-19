@@ -10,8 +10,8 @@ Player::Player(float speed, bool boolGrid[28][36])
             this->boolGrid[x][y] = boolGrid[x][y];
         }
     }
-    texture.loadFromFile("pacmanRight.png");
-    texture2.loadFromFile("pacmanClosed.png");
+    texture.loadFromFile("textures/pacmanRight.png");
+    texture2.loadFromFile("textures/pacmanClosed.png");
 
     nextDirection = 's';
     isClosed = false;
