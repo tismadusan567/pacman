@@ -127,3 +127,9 @@ Collider Player::getCollider()
 {
     return Collider(body);
 }
+
+void Player::die()
+{
+    body.setPosition(392.0f, 742.0f);
+    body.setTexture(&texture);
+}

@@ -14,7 +14,6 @@ public:
     int getPoints();
     sf::Vector2f getSize();
 private:
-    sf::Texture dotTexture;
     bool isActive;
     bool isBig;
     sf::RectangleShape body;

@@ -13,6 +13,7 @@ public:
     sf::Vector2f getSize();
     sf::Vector2f getMovement();
     Collider getCollider();
+    void die();
 private:
 
     char nextDirection;

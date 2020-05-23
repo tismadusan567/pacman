@@ -24,6 +24,7 @@ bool boolGridGhosts[28][36];
 std::vector<Wall> setWalls(sf::Texture* texture);
 std::vector<Dot> setDots(sf::Texture* texture);
 void setGrids();
+void reset(Player& player, Ghost& red, Ghost& pink, Ghost& yellow, Ghost& green, std::vector<Dot>& dots, float& pDTime, float& rDTime, float& piDTime, float& yDTime, float& gDTime);
 
 int main()
 {
@@ -47,17 +48,22 @@ int main()
 
     //text
     sf::Text score("SCORE ", font);
+    sf::Text livesText("LIVES", font);
     score.setCharacterSize(30);
     score.setStyle(sf::Text::Bold);
     score.setFillColor(sf::Color::White);
+    livesText.setCharacterSize(30);
+    livesText.setStyle(sf::Text::Bold);
+    livesText.setFillColor(sf::Color::White);
+    livesText.setPosition(660.0f, 0.0f);
 
     //objects
     setGrids(); 
     Player player(280.0f, boolGrid);
-    Ghost redGhost(224.0f,sf::Vector2f(18.5f*(float)TILE_SIZE, 18.5f*(float)TILE_SIZE),"redGhost", boolGridGhosts);
-    Ghost pinkGhost(224.0f,sf::Vector2f(4.5f*(float)TILE_SIZE, 4.5f*(float)TILE_SIZE),"pinkGhost", boolGridGhosts);
-    Ghost yellowGhost(224.0f,sf::Vector2f(26.5f*(float)TILE_SIZE, 26.5f*(float)TILE_SIZE),"yellowGhost", boolGridGhosts);
-    Ghost greenGhost(224.0f,sf::Vector2f(1.5f*(float)TILE_SIZE, 32.5f*(float)TILE_SIZE),"greenGhost", boolGridGhosts);
+    Ghost redGhost(200.0f,"redGhost", boolGridGhosts);
+    Ghost pinkGhost(200.0f,"pinkGhost", boolGridGhosts);
+    Ghost yellowGhost(200.0f,"yellowGhost", boolGridGhosts);
+    Ghost greenGhost(200.0f,"greenGhost", boolGridGhosts);
     std::vector<Wall> walls=setWalls(&wallTexture);
     std::vector<Dot> dots=setDots(&dotTexture); 
 
@@ -71,6 +77,12 @@ int main()
     std::srand((unsigned)time(0)); 
     float timeScared = 7.0f;
     bool areScared = false;
+    float redDeadTime = 0.0f;
+    float pinkDeadTime = 0.0f;
+    float yellowDeadTime = 0.0f;
+    float greenDeadTime = 0.0f;
+    float pacmanDeadTime = 0.0f;
+    int lives = 3;
 
     //game loop
     while (window.isOpen())
@@ -111,6 +123,31 @@ int main()
             playerCounter+=deltaTime;
             ghostCounter+=deltaTime;
 
+            if(!lives)
+            {
+                lives = 3;
+                scoreInt = 0;
+                reset(player, redGhost, pinkGhost, yellowGhost, greenGhost, dots, pacmanDeadTime, redDeadTime, pinkDeadTime, yellowDeadTime, greenDeadTime);
+                redDeadTime+=4.0f;
+                pinkDeadTime+=4.0f;
+                greenDeadTime+=4.0f;
+                yellowDeadTime+=4.0f;
+                pacmanDeadTime+=4.0f;
+            }
+
+            int activeDots = 0;
+            for(int i=0;i<dots.size();i++)
+            {
+                if(dots[i].getActive())
+                {
+                    activeDots++;
+                }
+            }
+            if(!activeDots)
+            {
+                reset(player, redGhost, pinkGhost, yellowGhost, greenGhost, dots, pacmanDeadTime, redDeadTime, pinkDeadTime, yellowDeadTime, greenDeadTime);
+            }
+
             if(areScared)
             {
                 timeScared -= deltaTime;
@@ -118,25 +155,59 @@ int main()
                 if(timeScared <= 0.0f)
                 {
                     redGhost.setScared(false);
-                    redGhost.setSpeed(224.0f);
                     pinkGhost.setScared(false);
-                    pinkGhost.setSpeed(224.0f);
                     yellowGhost.setScared(false);
-                    yellowGhost.setSpeed(224.0f);
                     greenGhost.setScared(false);
-                    greenGhost.setSpeed(224.0f);
                     areScared = false;
                     timeScared = 7.0f;
                     //std::cout << "NOT SCARED" << std::endl;
                 }
             }
-
+            if(pacmanDeadTime <= 0.0f)
+            {
             player.Update(window, deltaTime, playerCounter); //update player
-            redGhost.Update(window, deltaTime, ghostCounter, player.getPosition(), player.getMovement(), redGhost.getPosition());
-            pinkGhost.Update(window, deltaTime, ghostCounter, player.getPosition(), player.getMovement(), redGhost.getPosition());
-            yellowGhost.Update(window, deltaTime, ghostCounter, player.getPosition(), player.getMovement(), redGhost.getPosition());
-            greenGhost.Update(window, deltaTime, ghostCounter, player.getPosition(), player.getMovement(), redGhost.getPosition());
+            }
+            else
+            {
+                pacmanDeadTime -= deltaTime;
+            }
+            
+            if(redDeadTime <= 0.0f)
+            {  
+                redGhost.Update(window, deltaTime, ghostCounter, player.getPosition(), player.getMovement(), redGhost.getPosition());
+            }
+            else
+            {
+                redDeadTime -= deltaTime;
+            }
 
+            if(pinkDeadTime <= 0.0f)
+            {
+                pinkGhost.Update(window, deltaTime, ghostCounter, player.getPosition(), player.getMovement(), redGhost.getPosition());
+            }
+            else
+            {
+                pinkDeadTime -= deltaTime;
+            }
+
+            if(yellowDeadTime <= 0.0f)
+            {
+                yellowGhost.Update(window, deltaTime, ghostCounter, player.getPosition(), player.getMovement(), redGhost.getPosition());
+            }
+            else
+            {
+                yellowDeadTime -= deltaTime;
+            }
+
+            if(greenDeadTime <= 0.0f)
+            {
+                greenGhost.Update(window, deltaTime, ghostCounter, player.getPosition(), player.getMovement(), redGhost.getPosition());
+            }
+            else
+            {
+                greenDeadTime -= deltaTime;
+            }
+            
             Collider playerCollider = player.getCollider();
             Collider redGhostCollider = redGhost.getCollider();
             Collider pinkGhostCollider = pinkGhost.getCollider();
@@ -150,6 +221,74 @@ int main()
                 walls[i].getCollider().checkCollision(yellowGhostCollider, 1.0f);
                 walls[i].getCollider().checkCollision(greenGhostCollider, 1.0f);
             }
+            if(playerCollider.checkCollision(redGhostCollider, 0.5f))
+            {
+                if(redGhost.getScared())
+                {
+                    scoreInt += 400;
+                }
+                else
+                {
+                    player.die();pacmanDeadTime = 4.0f;
+                    lives--;
+                    pinkGhost.die();pinkDeadTime = 4.0f;
+                    yellowGhost.die();yellowDeadTime = 4.0f;
+                    greenGhost.die();greenDeadTime = 4.0f;
+                }
+                redGhost.die();
+                redDeadTime = 4.0f;
+            }
+            if(playerCollider.checkCollision(pinkGhostCollider, 0.5f))
+            {
+                if(pinkGhost.getScared())
+                {
+                    scoreInt += 400;
+                }
+                else
+                {
+                    player.die();pacmanDeadTime = 4.0f;
+                    lives--;
+                    redGhost.die();redDeadTime = 4.0f;
+                    yellowGhost.die();yellowDeadTime = 4.0f;
+                    greenGhost.die();greenDeadTime = 4.0f;
+                }
+                pinkGhost.die();
+                pinkDeadTime = 4.0f;
+            }
+            if(playerCollider.checkCollision(yellowGhostCollider, 0.5f))
+            {
+                if(yellowGhost.getScared())
+                {
+                    scoreInt += 400;
+                }
+                else
+                {
+                    player.die();pacmanDeadTime = 4.0f;
+                    lives--;
+                    redGhost.die();redDeadTime = 4.0f;
+                    pinkGhost.die();pinkDeadTime = 4.0f;
+                    greenGhost.die();greenDeadTime = 4.0f;
+                }
+                yellowGhost.die();
+                yellowDeadTime = 4.0f;
+            }
+            if(playerCollider.checkCollision(greenGhostCollider, 0.5f))
+            {
+                if(greenGhost.getScared())
+                {
+                    scoreInt += 400;
+                }
+                else
+                {
+                    player.die();pacmanDeadTime = 4.0f;
+                    lives--;
+                    redGhost.die();redDeadTime = 4.0f;
+                    yellowGhost.die();yellowDeadTime = 4.0f;
+                    pinkGhost.die();pinkDeadTime = 4.0f;
+                }
+                greenGhost.die();
+                greenDeadTime = 4.0f;
+            }
 
             for(int i=0;i<dots.size();i++)//update dots
             { 
@@ -161,13 +300,9 @@ int main()
                     if(dots[i].getBig())
                     {
                         redGhost.setScared(true);
-                        redGhost.setSpeed(120.0f);
                         pinkGhost.setScared(true);
-                        pinkGhost.setSpeed(120.0f);
                         yellowGhost.setScared(true);
-                        yellowGhost.setSpeed(120.0f);
                         greenGhost.setScared(true);
-                        greenGhost.setSpeed(120.0f);
                         areScared = true;
                         timeScared = 7.0f;
                     }
@@ -177,6 +312,10 @@ int main()
             std::string scoreString = "SCORE "; //update score
             scoreString += std::to_string(scoreInt);
             score.setString(scoreString);
+
+            std::string livesString = "LIVES "; //update lives
+            livesString += std::to_string(lives);
+            livesText.setString(livesString);
         }
 
         window.clear();
@@ -195,7 +334,9 @@ int main()
         yellowGhost.Draw(window);
         greenGhost.Draw(window);
         window.draw(score);
+        window.draw(livesText);
         window.display();
+        //std::cout << redGhost.getScared() << std::endl;
     }
 
     return 0;
@@ -319,5 +460,19 @@ void setGrids()
         {
             in3 >> boolGridGhosts[x][y];
         }
+    }
+}
+
+void reset(Player& player, Ghost& red, Ghost& pink, Ghost& yellow, Ghost& green, std::vector<Dot>& dots, float& pDTime, float& rDTime, float& piDTime, float& yDTime, float& gDTime)
+{
+    player.die();pDTime = 4.0f;
+    red.die();rDTime = 4.0f;
+    yellow.die();yDTime = 4.0f;
+    pink.die();piDTime = 4.0f;
+    green.die();gDTime = 4.0f;
+
+    for(int i=0;i < dots.size();i++)
+    {
+        dots[i].setActive(true);
     }
 }

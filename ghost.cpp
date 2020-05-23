@@ -3,7 +3,7 @@
 #include <iostream> //ovo izbrisi posle
 #include "ghost.h"
 
-Ghost::Ghost(const float& speed, const sf::Vector2f& position,const std::string& color, bool boolGrid[28][36])
+Ghost::Ghost(const float& speed,const std::string& color, bool boolGrid[28][36])
 {
     this->speed = speed;
     this->color = color;
@@ -21,12 +21,27 @@ Ghost::Ghost(const float& speed, const sf::Vector2f& position,const std::string&
     nextTile.x = -1;
     nextTile.y = -1;
     texture.loadFromFile("textures/" + color);
-    texture2.loadFromFile("textures/" + color);
+    texture2.loadFromFile("textures/blueGhost");
     body.setSize(sf::Vector2f(49.0f, 49.0f));
     body.setOrigin(body.getSize().x/2.0, body.getSize().y/2.0);
-    body.setPosition(position);
     body.setTexture(&texture);
     isScared = false;
+
+    float offset = 0.0f;
+
+    if(color == "pinkGhost")
+    {
+        offset = 28.0f;
+    }
+    if(color == "yellowGhost")
+    {
+        offset = 56.0f;
+    }
+    if(color == "greenGhost")
+    {
+        offset = 84.0f;
+    }
+    body.setPosition(350.0f + offset,420.0f);
 }
 
 Ghost::~Ghost()
@@ -36,22 +51,29 @@ Ghost::~Ghost()
 
 void Ghost::Update(sf::RenderWindow& window, const float& deltaTime, float& counter, const sf::Vector2f& pacmanPosition, const sf::Vector2f& pacmanMovement, const sf::Vector2f& redGostPosition)
 {
-    if(counter>0.1f)
+    // if(counter>0.1f)
+    // {
+    //         counter=0.0f;
+    //         if(animationNum == 0)
+    //         {
+    //             body.setTexture(&texture);
+    //             animationNum++;
+    //         }
+    //         else
+    //         {
+    //             body.setTexture(&texture2);
+    //             animationNum = 0;
+    //         }
+    // }
+    if(isScared)
     {
-            counter=0.0f;
-            if(animationNum == 0)
-            {
-                body.setTexture(&texture);
-                animationNum++;
-            }
-            else
-            {
-                body.setTexture(&texture2);
-                animationNum = 0;
-            }
+        body.setTexture(&texture2);
     }
-
-
+    else
+    {
+        body.setTexture(&texture);
+    }
+    
     if(nextTile.x == -1 || nextTile.y == -1 || body.getPosition().x > nextTile.x*28.0f - 0.58*28.0f && body.getPosition().x < nextTile.x*28.0f - 0.42*28.0f && body.getPosition().y > nextTile.y*28.0f - 0.58f*28.0f && body.getPosition().y < nextTile.y*28.0f - 0.42f*28.0f)
     {
         sf::Vector2i current((int)body.getPosition().x / 28 + 1, (int)body.getPosition().y / 28 + 1);
@@ -81,7 +103,6 @@ void Ghost::Update(sf::RenderWindow& window, const float& deltaTime, float& coun
             movement.x = 0.0f;
             movement.y = -speed*deltaTime;
         }
-    
     body.move(movement.x, movement.y);
     //if(isScared)std::cout << "Scared" << std::endl;
     //std::cout << movement.x << " " << movement.y << " " << body.getPosition().x << " " << body.getPosition().y << std::endl;
@@ -117,9 +138,23 @@ Collider Ghost::getCollider()
     return Collider(body);
 }
 
+bool Ghost::getScared()
+{
+    return isScared;
+}
+
 void Ghost::setScared(const bool& isScared)
 {
     this->isScared = isScared;
+    if(isScared)
+    {
+        speed = 120.0f;
+    }
+    else
+    {
+        speed = 224.0f;
+    }
+    
 }
 
 void Ghost::setSpeed(const float& speed)
@@ -273,4 +308,27 @@ sf::Vector2i Ghost::pathfind(const sf::Vector2i& start, const sf::Vector2i& targ
         }
     }
     return nextTile;
+}
+
+void Ghost::die()
+{
+    this->setScared(false);
+    float offset = 0.0f;
+
+    if(color == "pinkGhost")
+    {
+        offset = 28.0f;
+    }
+    if(color == "yellowGhost")
+    {
+        offset = 56.0f;
+    }
+    if(color == "greenGhost")
+    {
+        offset = 84.0f;
+    }
+    body.setPosition(350.0f + offset,420.0f);
+    body.setTexture(&texture);
+    nextTile.x = -1;
+    nextTile.y = -1;
 }
