@@ -11,6 +11,7 @@ public:
     void Draw(sf::RenderWindow& window);
     sf::Vector2f getPosition();
     sf::Vector2f getSize();
+    sf::Vector2f getMovement();
     Collider getCollider();
 private:
 

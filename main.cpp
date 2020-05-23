@@ -19,6 +19,7 @@
 
 char grid[WINDOW_WIDTH/TILE_SIZE][WINDOW_HEIGHT/TILE_SIZE] = {0};
 bool boolGrid[28][36];
+bool boolGridGhosts[28][36];
 
 std::vector<Wall> setWalls(sf::Texture* texture);
 std::vector<Dot> setDots(sf::Texture* texture);
@@ -53,20 +54,23 @@ int main()
     //objects
     setGrids(); 
     Player player(280.0f, boolGrid);
-    Ghost redGhost(224.0f,sf::Vector2f(18.5f*(float)TILE_SIZE, 18.5f*(float)TILE_SIZE),"redGhost", boolGrid);
-    Ghost orangeGhost(224.0f,sf::Vector2f(4.5f*(float)TILE_SIZE, 4.5f*(float)TILE_SIZE),"orangeGhost", boolGrid);
-    Ghost yellowGhost(224.0f,sf::Vector2f(26.5f*(float)TILE_SIZE, 26.5f*(float)TILE_SIZE),"yellowGhost", boolGrid);
-    Ghost greenGhost(224.0f,sf::Vector2f(1.5f*(float)TILE_SIZE, 32.5f*(float)TILE_SIZE),"greenGhost", boolGrid);
+    Ghost redGhost(224.0f,sf::Vector2f(18.5f*(float)TILE_SIZE, 18.5f*(float)TILE_SIZE),"redGhost", boolGridGhosts);
+    Ghost pinkGhost(224.0f,sf::Vector2f(4.5f*(float)TILE_SIZE, 4.5f*(float)TILE_SIZE),"pinkGhost", boolGridGhosts);
+    Ghost yellowGhost(224.0f,sf::Vector2f(26.5f*(float)TILE_SIZE, 26.5f*(float)TILE_SIZE),"yellowGhost", boolGridGhosts);
+    Ghost greenGhost(224.0f,sf::Vector2f(1.5f*(float)TILE_SIZE, 32.5f*(float)TILE_SIZE),"greenGhost", boolGridGhosts);
     std::vector<Wall> walls=setWalls(&wallTexture);
     std::vector<Dot> dots=setDots(&dotTexture); 
 
     //variables
+    bool isPaused = false;
     float deltaTime = 0.0f;
     float fps;
     float playerCounter=0.0f,ghostCounter=0.0f;
     int scoreInt=0;
     sf::Clock clock;
     std::srand((unsigned)time(0)); 
+    float timeScared = 7.0f;
+    bool areScared = false;
 
     //game loop
     while (window.isOpen())
@@ -94,60 +98,100 @@ int main()
                     window.setView(view);
 
                     break;
-                case sf::Event::TextEntered:
-                    if(event.text.unicode < 128){
-                        std::cout << (char)event.text.unicode << std::flush;
+                case sf::Event::KeyReleased:
+                    if(event.key.code == sf::Keyboard::Key::Escape){
+                        isPaused = !isPaused;
                     }
             }
         }
 
         //update / draw / display
-        playerCounter+=deltaTime;
-        ghostCounter+=deltaTime;
-        player.Update(window, deltaTime, playerCounter); //update player
-        redGhost.Update(window, deltaTime, ghostCounter, player.getPosition());
-        orangeGhost.Update(window, deltaTime, ghostCounter, player.getPosition());
-        yellowGhost.Update(window, deltaTime, ghostCounter, player.getPosition());
-        greenGhost.Update(window, deltaTime, ghostCounter, player.getPosition());
+        if(!isPaused)
+        {
+            playerCounter+=deltaTime;
+            ghostCounter+=deltaTime;
 
-        Collider playerCollider = player.getCollider();
-        for(int i=0;i<walls.size();i++){
-            walls[i].getCollider().checkCollision(playerCollider, 1.0f);
-        }
-        Collider redGhostCollider = redGhost.getCollider();
-        Collider orangeGhostCollider = orangeGhost.getCollider();
-        Collider yellowGhostCollider = yellowGhost.getCollider();
-        Collider greenGhostCollider = greenGhost.getCollider();
-        for(int i=0;i<walls.size();i++){
-            walls[i].getCollider().checkCollision(redGhostCollider, 1.0f);
-            walls[i].getCollider().checkCollision(orangeGhostCollider, 1.0f);
-            walls[i].getCollider().checkCollision(yellowGhostCollider, 1.0f);
-            walls[i].getCollider().checkCollision(greenGhostCollider, 1.0f);
-        }
-
-        for(int i=0;i<dots.size();i++){ //update dots
-            if(dots[i].getActive()==false)continue;
-            if(abs(player.getPosition().x - dots[i].getPosition().x)<(player.getSize().x/2.0f + dots[i].getSize().x/2.0f) && abs(player.getPosition().y - dots[i].getPosition().y)<(player.getSize().y/2.0f + dots[i].getSize().y/2.0f)){
-                dots[i].setActive(false);
-                scoreInt+=dots[i].getPoints();
+            if(areScared)
+            {
+                timeScared -= deltaTime;
+                //std::cout << "SCARED" << std::endl;
+                if(timeScared <= 0.0f)
+                {
+                    redGhost.setScared(false);
+                    redGhost.setSpeed(224.0f);
+                    pinkGhost.setScared(false);
+                    pinkGhost.setSpeed(224.0f);
+                    yellowGhost.setScared(false);
+                    yellowGhost.setSpeed(224.0f);
+                    greenGhost.setScared(false);
+                    greenGhost.setSpeed(224.0f);
+                    areScared = false;
+                    timeScared = 7.0f;
+                    //std::cout << "NOT SCARED" << std::endl;
+                }
             }
-        }
 
-        std::string scoreString = "SCORE "; //update score
-        scoreString += std::to_string(scoreInt);
-        score.setString(scoreString);
+            player.Update(window, deltaTime, playerCounter); //update player
+            redGhost.Update(window, deltaTime, ghostCounter, player.getPosition(), player.getMovement(), redGhost.getPosition());
+            pinkGhost.Update(window, deltaTime, ghostCounter, player.getPosition(), player.getMovement(), redGhost.getPosition());
+            yellowGhost.Update(window, deltaTime, ghostCounter, player.getPosition(), player.getMovement(), redGhost.getPosition());
+            greenGhost.Update(window, deltaTime, ghostCounter, player.getPosition(), player.getMovement(), redGhost.getPosition());
+
+            Collider playerCollider = player.getCollider();
+            Collider redGhostCollider = redGhost.getCollider();
+            Collider pinkGhostCollider = pinkGhost.getCollider();
+            Collider yellowGhostCollider = yellowGhost.getCollider();
+            Collider greenGhostCollider = greenGhost.getCollider();
+            for(int i=0;i<walls.size();i++)
+            {
+                walls[i].getCollider().checkCollision(playerCollider, 1.0f);
+                walls[i].getCollider().checkCollision(redGhostCollider, 1.0f);
+                walls[i].getCollider().checkCollision(pinkGhostCollider, 1.0f);
+                walls[i].getCollider().checkCollision(yellowGhostCollider, 1.0f);
+                walls[i].getCollider().checkCollision(greenGhostCollider, 1.0f);
+            }
+
+            for(int i=0;i<dots.size();i++)//update dots
+            { 
+                if(dots[i].getActive()==false)continue;
+                if(abs(player.getPosition().x - dots[i].getPosition().x)<(player.getSize().x/2.0f + dots[i].getSize().x/2.0f) && abs(player.getPosition().y - dots[i].getPosition().y)<(player.getSize().y/2.0f + dots[i].getSize().y/2.0f))
+                {
+                    dots[i].setActive(false);
+                    scoreInt+=dots[i].getPoints();
+                    if(dots[i].getBig())
+                    {
+                        redGhost.setScared(true);
+                        redGhost.setSpeed(120.0f);
+                        pinkGhost.setScared(true);
+                        pinkGhost.setSpeed(120.0f);
+                        yellowGhost.setScared(true);
+                        yellowGhost.setSpeed(120.0f);
+                        greenGhost.setScared(true);
+                        greenGhost.setSpeed(120.0f);
+                        areScared = true;
+                        timeScared = 7.0f;
+                    }
+                }
+            }
+
+            std::string scoreString = "SCORE "; //update score
+            scoreString += std::to_string(scoreInt);
+            score.setString(scoreString);
+        }
 
         window.clear();
         player.Draw(window);
         //std::cout << player.getPosition().x << " " << player.getPosition().y << std::endl;//
-        for(int i=0;i<walls.size();i++){
+        for(int i=0;i<walls.size();i++)
+        {
             walls[i].Draw(window);
         }
-        for(int i=0;i<dots.size();i++){
+        for(int i=0;i<dots.size();i++)
+        {
             if(dots[i].getActive())dots[i].Draw(window);
         }
         redGhost.Draw(window);
-        orangeGhost.Draw(window);
+        pinkGhost.Draw(window);
         yellowGhost.Draw(window);
         greenGhost.Draw(window);
         window.draw(score);
@@ -160,14 +204,18 @@ int main()
 std::vector<Dot> setDots(sf::Texture* texture)
 {
     std::vector<Dot> v;
-    for(int x=0;x<WINDOW_WIDTH;x+=TILE_SIZE){
-        for(int y=0;y<WINDOW_HEIGHT;y+=TILE_SIZE){
-            if(grid[x/TILE_SIZE][y/TILE_SIZE]=='d'){
-                Dot temp((float)x+float(TILE_SIZE/2),(float)y+float(TILE_SIZE/2), texture, 7.0f, 10);
+    for(int x=0;x<WINDOW_WIDTH;x+=TILE_SIZE)
+    {
+        for(int y=0;y<WINDOW_HEIGHT;y+=TILE_SIZE)
+        {
+            if(grid[x/TILE_SIZE][y/TILE_SIZE]=='d')
+            {
+                Dot temp((float)x+float(TILE_SIZE/2),(float)y+float(TILE_SIZE/2), texture, false);
                 v.push_back(temp);
             }
-            if(grid[x/TILE_SIZE][y/TILE_SIZE]=='D'){
-                Dot temp((float)x+float(TILE_SIZE/2),(float)y+float(TILE_SIZE/2), texture, 28.0f, 50);
+            if(grid[x/TILE_SIZE][y/TILE_SIZE]=='D')
+            {
+                Dot temp((float)x+float(TILE_SIZE/2),(float)y+float(TILE_SIZE/2), texture, true);
                 v.push_back(temp);
             }
         }
@@ -262,6 +310,14 @@ void setGrids()
         for(int x=0;x<28;x++)
         {
             in2 >> boolGrid[x][y];
+        }
+    }
+    std::ifstream in3("boolGridGhosts");
+    for(int y=0;y<36;y++)
+    {
+        for(int x=0;x<28;x++)
+        {
+            in3 >> boolGridGhosts[x][y];
         }
     }
 }

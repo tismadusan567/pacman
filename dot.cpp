@@ -1,12 +1,22 @@
 #include <SFML/Graphics.hpp>
 #include "dot.h"
 
-Dot::Dot(float x, float y, sf::Texture* texture,float size,int points)
+Dot::Dot(float x, float y, sf::Texture* texture, bool isBig)
 {
     isActive = true;
-    this->points = points;
+    this->isBig = isBig;
+    if(isBig)
+    {
+        points = 50;
+        body.setSize(sf::Vector2f(28.0f, 28.0f));
 
-    body.setSize(sf::Vector2f(size, size));
+    }
+    else
+    {
+        points = 10;
+        body.setSize(sf::Vector2f(7.0f, 7.0f));
+    }
+    
     body.setOrigin(body.getSize().x/2.0f, body.getSize().y/2.0f);
     body.setPosition(x, y);
     body.setTexture(texture);
@@ -20,6 +30,11 @@ Dot::~Dot()
 bool Dot::getActive()
 {
     return isActive;
+}
+
+bool Dot::getBig()
+{
+    return isBig;
 }
 
 void Dot::setActive(bool active)

@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <iostream> //ovo izbrisi posle
 #include "player.h"
 
 Player::Player(float speed, bool boolGrid[28][36])
@@ -92,12 +93,13 @@ void Player::Update(sf::RenderWindow& window, float deltaTime, float& counter)
             }
             break;
     }
+    //std::cout << movement.x << " " << movement.y << std::endl;
     body.move(movement.x, movement.y);
-    if(body.getPosition().x>window.getSize().x+body.getSize().x/2.0f){
-        body.setPosition(-body.getSize().x/2.0f, body.getPosition().y);
+    if(body.getPosition().x > 784.0f + body.getSize().x / 2.0f){
+        body.setPosition(-body.getSize().x / 2.0f, body.getPosition().y);
     }
-    if(body.getPosition().x<-body.getSize().x/2.0f){
-        body.setPosition(window.getSize().x+body.getSize().x/2.0f, body.getPosition().y);
+    if(body.getPosition().x < -body.getSize().x/2.0f){
+        body.setPosition(784.0f + body.getSize().x/2.0f, body.getPosition().y);
     }
 }
 
@@ -116,6 +118,10 @@ sf::Vector2f Player::getSize()
     return body.getSize();
 }
 
+sf::Vector2f Player::getMovement()
+{
+    return movement;
+}
 
 Collider Player::getCollider() 
 {

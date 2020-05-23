@@ -5,20 +5,26 @@
 class Ghost
 {
 public:
-    Ghost(float speed, sf::Vector2f position,const std::string& color, bool boolGrid[28][36]);
+    Ghost(const float& speed, const sf::Vector2f& position,const std::string& color, bool boolGrid[28][36]);
     ~Ghost();
-    void Update(sf::RenderWindow& window, float deltaTime, float& counter, sf::Vector2f pacmanPosition);
+    void Update(sf::RenderWindow& window, const float& deltaTime, float& counter, const sf::Vector2f& pacmanPosition, const sf::Vector2f& pacmanMovement, const sf::Vector2f& redGhostPosition);
     void Draw(sf::RenderWindow& window);
     sf::Vector2f getPosition();
     sf::Vector2f getSize();
     Collider getCollider();
-    std::vector<sf::Vector2i> bfs(sf::Vector2i start, sf::Vector2i target);
+    void setScared(const bool& isScared);
+    void setSpeed(const float& speed);
+    void adjustTarget(sf::Vector2i &target, const sf::Vector2f& pacmanPosition, const sf::Vector2f& pacmanMovement, const sf::Vector2f& redGhostPosition);
+    std::vector<char> validPaths(const int& x, const int& y);
+    sf::Vector2i pathfind(const sf::Vector2i& start, const sf::Vector2i& target);
 private:
-    bool boolGrid[28][36];
+    bool boolGrid[29][37];
     sf::Vector2f movement;
     sf::RectangleShape body;
     float speed;
     int animationNum;
     sf::Texture texture, texture2;
     sf::Vector2i nextTile;
+    std::string color;
+    bool isScared;
 };
