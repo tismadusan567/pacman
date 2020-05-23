@@ -152,7 +152,7 @@ void Ghost::setScared(const bool& isScared)
     }
     else
     {
-        speed = 224.0f;
+        speed = 200.0f;
     }
     
 }
