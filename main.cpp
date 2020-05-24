@@ -49,13 +49,27 @@ int main()
     //text
     sf::Text score("SCORE ", font);
     sf::Text livesText("LIVES", font);
+    sf::Text levelText("LEVEL", font);
+    sf::Text pauseText("PRESS SPACE TO CONTINUE", font);
+
     score.setCharacterSize(30);
     score.setStyle(sf::Text::Bold);
     score.setFillColor(sf::Color::White);
+
     livesText.setCharacterSize(30);
     livesText.setStyle(sf::Text::Bold);
     livesText.setFillColor(sf::Color::White);
     livesText.setPosition(660.0f, 0.0f);
+
+    levelText.setCharacterSize(30);
+    levelText.setStyle(sf::Text::Bold);
+    levelText.setFillColor(sf::Color::White);
+    levelText.setPosition(0.0f, 950.0f);
+
+    pauseText.setCharacterSize(30);
+    pauseText.setStyle(sf::Text::Bold);
+    pauseText.setFillColor(sf::Color::White);
+    pauseText.setPosition(200.0f, 460.0f);
 
     //objects
     setGrids(); 
@@ -64,11 +78,20 @@ int main()
     Ghost pinkGhost(200.0f,"pinkGhost", boolGridGhosts);
     Ghost yellowGhost(200.0f,"yellowGhost", boolGridGhosts);
     Ghost greenGhost(200.0f,"greenGhost", boolGridGhosts);
+
     std::vector<Wall> walls=setWalls(&wallTexture);
     std::vector<Dot> dots=setDots(&dotTexture); 
 
+    sf::RectangleShape crno, crno2;
+    crno.setSize(sf::Vector2f(70.0f, 70.0f));
+    crno.setFillColor(sf::Color::Black);
+    crno.setPosition(784.0f,453.0f);
+    crno2.setSize(sf::Vector2f(70.0f, 70.0f));
+    crno2.setFillColor(sf::Color::Black);
+    crno2.setPosition(-70.0f, 453.0f);
+
     //variables
-    bool isPaused = false;
+    bool isPaused = true;
     float deltaTime = 0.0f;
     float fps;
     float playerCounter=0.0f,ghostCounter=0.0f;
@@ -83,6 +106,7 @@ int main()
     float greenDeadTime = 0.0f;
     float pacmanDeadTime = 0.0f;
     int lives = 3;
+    int level = 1;
 
     //game loop
     while (window.isOpen())
@@ -104,14 +128,13 @@ int main()
                     window.close();
                     break;
                 case sf::Event::Resized:
-                    std::cout << event.size.width << "x" << event.size.height << std::endl;
                     view.setCenter(window.getView().getCenter());
                     view.setSize(sf::Vector2f(event.size.width, event.size.height));
                     window.setView(view);
 
                     break;
                 case sf::Event::KeyReleased:
-                    if(event.key.code == sf::Keyboard::Key::Escape){
+                    if(event.key.code == sf::Keyboard::Key::Escape || event.key.code == sf::Keyboard::Key::Space){
                         isPaused = !isPaused;
                     }
             }
@@ -128,11 +151,8 @@ int main()
                 lives = 3;
                 scoreInt = 0;
                 reset(player, redGhost, pinkGhost, yellowGhost, greenGhost, dots, pacmanDeadTime, redDeadTime, pinkDeadTime, yellowDeadTime, greenDeadTime);
-                redDeadTime+=4.0f;
-                pinkDeadTime+=4.0f;
-                greenDeadTime+=4.0f;
-                yellowDeadTime+=4.0f;
-                pacmanDeadTime+=4.0f;
+                isPaused = true;
+                level = 1;
             }
 
             int activeDots = 0;
@@ -145,13 +165,13 @@ int main()
             }
             if(!activeDots)
             {
+                level++;
                 reset(player, redGhost, pinkGhost, yellowGhost, greenGhost, dots, pacmanDeadTime, redDeadTime, pinkDeadTime, yellowDeadTime, greenDeadTime);
             }
 
             if(areScared)
             {
                 timeScared -= deltaTime;
-                //std::cout << "SCARED" << std::endl;
                 if(timeScared <= 0.0f)
                 {
                     redGhost.setScared(false);
@@ -160,7 +180,6 @@ int main()
                     greenGhost.setScared(false);
                     areScared = false;
                     timeScared = 7.0f;
-                    //std::cout << "NOT SCARED" << std::endl;
                 }
             }
             if(pacmanDeadTime <= 0.0f)
@@ -316,11 +335,14 @@ int main()
             std::string livesString = "LIVES "; //update lives
             livesString += std::to_string(lives);
             livesText.setString(livesString);
+
+            std::string levelString = "LEVEL "; //update level
+            levelString += std::to_string(level);
+            levelText.setString(levelString);
         }
 
         window.clear();
         player.Draw(window);
-        //std::cout << player.getPosition().x << " " << player.getPosition().y << std::endl;//
         for(int i=0;i<walls.size();i++)
         {
             walls[i].Draw(window);
@@ -335,8 +357,14 @@ int main()
         greenGhost.Draw(window);
         window.draw(score);
         window.draw(livesText);
+        window.draw(levelText);
+        window.draw(crno);
+        window.draw(crno2);
+        if(isPaused)
+        {
+            window.draw(pauseText);
+        }
         window.display();
-        //std::cout << redGhost.getScared() << std::endl;
     }
 
     return 0;

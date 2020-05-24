@@ -1,6 +1,5 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
-#include <iostream> //ovo izbrisi posle
 #include "ghost.h"
 
 Ghost::Ghost(const float& speed,const std::string& color, bool boolGrid[28][36])
@@ -41,7 +40,7 @@ Ghost::Ghost(const float& speed,const std::string& color, bool boolGrid[28][36])
     {
         offset = 84.0f;
     }
-    body.setPosition(350.0f + offset,420.0f);
+    body.setPosition(350.0f + offset,407.0f);
 }
 
 Ghost::~Ghost()
@@ -51,20 +50,6 @@ Ghost::~Ghost()
 
 void Ghost::Update(sf::RenderWindow& window, const float& deltaTime, float& counter, const sf::Vector2f& pacmanPosition, const sf::Vector2f& pacmanMovement, const sf::Vector2f& redGostPosition)
 {
-    // if(counter>0.1f)
-    // {
-    //         counter=0.0f;
-    //         if(animationNum == 0)
-    //         {
-    //             body.setTexture(&texture);
-    //             animationNum++;
-    //         }
-    //         else
-    //         {
-    //             body.setTexture(&texture2);
-    //             animationNum = 0;
-    //         }
-    // }
     if(isScared)
     {
         body.setTexture(&texture2);
@@ -80,7 +65,6 @@ void Ghost::Update(sf::RenderWindow& window, const float& deltaTime, float& coun
         sf::Vector2i target((int)pacmanPosition.x / 28 + 1, (int)pacmanPosition.y / 28 + 1);
         adjustTarget(target, pacmanPosition, pacmanMovement, redGostPosition);
         nextTile = pathfind(current, target);
-        //std::cout << nextTile.x << " " << nextTile.y << std::endl;
     }
 
     if(body.getPosition().x < nextTile.x*28.0f - 0.58*28.0f)
@@ -104,8 +88,6 @@ void Ghost::Update(sf::RenderWindow& window, const float& deltaTime, float& coun
             movement.y = -speed*deltaTime;
         }
     body.move(movement.x, movement.y);
-    //if(isScared)std::cout << "Scared" << std::endl;
-    //std::cout << movement.x << " " << movement.y << " " << body.getPosition().x << " " << body.getPosition().y << std::endl;
 
     if(body.getPosition().x>window.getSize().x+body.getSize().x/2.0f)
     {
@@ -327,7 +309,7 @@ void Ghost::die()
     {
         offset = 84.0f;
     }
-    body.setPosition(350.0f + offset,420.0f);
+    body.setPosition(350.0f + offset,407.0f);
     body.setTexture(&texture);
     nextTile.x = -1;
     nextTile.y = -1;
