@@ -5,13 +5,15 @@
 class Player
 {
 public:
-    Player(float speed, sf::Texture* texture, sf::Texture* texture2, bool boolGrid[28][36]);
+    Player(float speed, bool boolGrid[28][36]);
     ~Player();
     void Update(sf::RenderWindow& window, float deltaTime, float& counter);
     void Draw(sf::RenderWindow& window);
     sf::Vector2f getPosition();
     sf::Vector2f getSize();
+    sf::Vector2f getMovement();
     Collider getCollider();
+    void die();
 private:
 
     char nextDirection;
@@ -20,5 +22,5 @@ private:
     float speed;
     bool isClosed;
     bool boolGrid[28][36];
-    sf::Texture *texture, *texture2;
+    sf::Texture texture, texture2;
 };

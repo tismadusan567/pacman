@@ -1,16 +1,18 @@
 #include <SFML/Graphics.hpp>
+#include <iostream> //ovo izbrisi posle
 #include "player.h"
 
-Player::Player(float speed, sf::Texture* texture, sf::Texture* texture2, bool boolGrid[28][36])
+Player::Player(float speed, bool boolGrid[28][36])
 {
     this->speed = speed;
-    this->texture = texture;
-    this->texture2 = texture2;
+    
     for(int y=0;y<36;y++){
         for(int x=0;x<28;x++){
             this->boolGrid[x][y] = boolGrid[x][y];
         }
     }
+    texture.loadFromFile("textures/pacmanRight.png");
+    texture2.loadFromFile("textures/pacmanClosed.png");
 
     nextDirection = 's';
     isClosed = false;
@@ -20,7 +22,7 @@ Player::Player(float speed, sf::Texture* texture, sf::Texture* texture2, bool bo
     body.setSize(sf::Vector2f(49.0f, 49.0f));
     body.setOrigin(body.getSize().x/2.0, body.getSize().y/2.0);
     body.setPosition(392.0f, 742.0f);
-    body.setTexture(texture);
+    body.setTexture(&texture);
 }
 
 Player::~Player()
@@ -33,11 +35,11 @@ void Player::Update(sf::RenderWindow& window, float deltaTime, float& counter)
     if(counter>0.1f){
             counter=0.0f;
             if(isClosed){
-                body.setTexture(texture);
+                body.setTexture(&texture);
                 isClosed = false;
             }
             else{
-                body.setTexture(texture2);
+                body.setTexture(&texture2);
                 isClosed = true;
             }
         }
@@ -91,12 +93,13 @@ void Player::Update(sf::RenderWindow& window, float deltaTime, float& counter)
             }
             break;
     }
+    //std::cout << movement.x << " " << movement.y << std::endl;
     body.move(movement.x, movement.y);
-    if(body.getPosition().x>window.getSize().x+body.getSize().x/2.0f){
-        body.setPosition(-body.getSize().x/2.0f, body.getPosition().y);
+    if(body.getPosition().x > 784.0f + body.getSize().x / 2.0f){
+        body.setPosition(-body.getSize().x / 2.0f, body.getPosition().y);
     }
-    if(body.getPosition().x<-body.getSize().x/2.0f){
-        body.setPosition(window.getSize().x+body.getSize().x/2.0f, body.getPosition().y);
+    if(body.getPosition().x < -body.getSize().x/2.0f){
+        body.setPosition(784.0f + body.getSize().x/2.0f, body.getPosition().y);
     }
 }
 
@@ -115,8 +118,18 @@ sf::Vector2f Player::getSize()
     return body.getSize();
 }
 
+sf::Vector2f Player::getMovement()
+{
+    return movement;
+}
 
 Collider Player::getCollider() 
 {
     return Collider(body);
+}
+
+void Player::die()
+{
+    body.setPosition(392.0f, 742.0f);
+    body.setTexture(&texture);
 }

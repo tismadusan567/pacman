@@ -19,10 +19,12 @@
 
 char grid[WINDOW_WIDTH/TILE_SIZE][WINDOW_HEIGHT/TILE_SIZE] = {0};
 bool boolGrid[28][36];
+bool boolGridGhosts[28][36];
 
 std::vector<Wall> setWalls(sf::Texture* texture);
 std::vector<Dot> setDots(sf::Texture* texture);
 void setGrids();
+void reset(Player& player, Ghost& red, Ghost& pink, Ghost& yellow, Ghost& green, std::vector<Dot>& dots, float& pDTime, float& rDTime, float& piDTime, float& yDTime, float& gDTime);
 
 int main()
 {
@@ -36,12 +38,9 @@ int main()
     window.setView(view);
 
     //textures
-    sf::Texture dotTexture, PacmanTexture, PacmanTextureClosed, wallTexture, redGhostTexture;
-    dotTexture.loadFromFile("pacmanClosed.png");
-    PacmanTexture.loadFromFile("pacmanRight.png");
-    PacmanTextureClosed.loadFromFile("pacmanClosed.png");
-    wallTexture.loadFromFile("space.jpg");
-    redGhostTexture.loadFromFile("red ghost.png");
+    sf::Texture dotTexture, wallTexture;
+    dotTexture.loadFromFile("textures/pacmanClosed.png");
+    wallTexture.loadFromFile("textures/space.jpg");
 
     //font
     sf::Font font;
@@ -49,24 +48,41 @@ int main()
 
     //text
     sf::Text score("SCORE ", font);
+    sf::Text livesText("LIVES", font);
     score.setCharacterSize(30);
     score.setStyle(sf::Text::Bold);
     score.setFillColor(sf::Color::White);
+    livesText.setCharacterSize(30);
+    livesText.setStyle(sf::Text::Bold);
+    livesText.setFillColor(sf::Color::White);
+    livesText.setPosition(660.0f, 0.0f);
 
     //objects
     setGrids(); 
-    Player player(280.0f, &PacmanTexture, &PacmanTextureClosed, boolGrid);
-    Ghost redGhost(280.0f,sf::Vector2f((float)WINDOW_HEIGHT/2.0f, 18.0f*(float)TILE_SIZE), &redGhostTexture, &redGhostTexture);
+    Player player(280.0f, boolGrid);
+    Ghost redGhost(200.0f,"redGhost", boolGridGhosts);
+    Ghost pinkGhost(200.0f,"pinkGhost", boolGridGhosts);
+    Ghost yellowGhost(200.0f,"yellowGhost", boolGridGhosts);
+    Ghost greenGhost(200.0f,"greenGhost", boolGridGhosts);
     std::vector<Wall> walls=setWalls(&wallTexture);
     std::vector<Dot> dots=setDots(&dotTexture); 
 
     //variables
+    bool isPaused = false;
     float deltaTime = 0.0f;
     float fps;
     float playerCounter=0.0f,ghostCounter=0.0f;
     int scoreInt=0;
     sf::Clock clock;
     std::srand((unsigned)time(0)); 
+    float timeScared = 7.0f;
+    bool areScared = false;
+    float redDeadTime = 0.0f;
+    float pinkDeadTime = 0.0f;
+    float yellowDeadTime = 0.0f;
+    float greenDeadTime = 0.0f;
+    float pacmanDeadTime = 0.0f;
+    int lives = 3;
 
     //game loop
     while (window.isOpen())
@@ -94,53 +110,233 @@ int main()
                     window.setView(view);
 
                     break;
-                case sf::Event::TextEntered:
-                    if(event.text.unicode < 128){
-                        std::cout << (char)event.text.unicode << std::flush;
+                case sf::Event::KeyReleased:
+                    if(event.key.code == sf::Keyboard::Key::Escape){
+                        isPaused = !isPaused;
                     }
             }
         }
 
         //update / draw / display
-        playerCounter+=deltaTime;
-        ghostCounter+=deltaTime;
-        redGhost.setDirection(rand()%4);
-        player.Update(window, deltaTime, playerCounter); //update player
-        redGhost.Update(window, deltaTime, ghostCounter);
+        if(!isPaused)
+        {
+            playerCounter+=deltaTime;
+            ghostCounter+=deltaTime;
 
-        Collider playerCollider = player.getCollider();
-        for(int i=0;i<walls.size();i++){
-            walls[i].getCollider().checkCollision(playerCollider, 1.0f);
-        }
-        Collider redGhostCollider = redGhost.getCollider();
-        for(int i=0;i<walls.size();i++){
-            walls[i].getCollider().checkCollision(redGhostCollider, 1.0f);
-        }
-
-        for(int i=0;i<dots.size();i++){ //update dots
-            if(dots[i].getActive()==false)continue;
-            if(abs(player.getPosition().x - dots[i].getPosition().x)<(player.getSize().x/2.0f + dots[i].getSize().x/2.0f) && abs(player.getPosition().y - dots[i].getPosition().y)<(player.getSize().y/2.0f + dots[i].getSize().y/2.0f)){
-                dots[i].setActive(false);
-                scoreInt+=dots[i].getPoints();
+            if(!lives)
+            {
+                lives = 3;
+                scoreInt = 0;
+                reset(player, redGhost, pinkGhost, yellowGhost, greenGhost, dots, pacmanDeadTime, redDeadTime, pinkDeadTime, yellowDeadTime, greenDeadTime);
+                redDeadTime+=4.0f;
+                pinkDeadTime+=4.0f;
+                greenDeadTime+=4.0f;
+                yellowDeadTime+=4.0f;
+                pacmanDeadTime+=4.0f;
             }
-        }
 
-        std::string scoreString = "SCORE "; //update score
-        scoreString += std::to_string(scoreInt);
-        score.setString(scoreString);
+            int activeDots = 0;
+            for(int i=0;i<dots.size();i++)
+            {
+                if(dots[i].getActive())
+                {
+                    activeDots++;
+                }
+            }
+            if(!activeDots)
+            {
+                reset(player, redGhost, pinkGhost, yellowGhost, greenGhost, dots, pacmanDeadTime, redDeadTime, pinkDeadTime, yellowDeadTime, greenDeadTime);
+            }
+
+            if(areScared)
+            {
+                timeScared -= deltaTime;
+                //std::cout << "SCARED" << std::endl;
+                if(timeScared <= 0.0f)
+                {
+                    redGhost.setScared(false);
+                    pinkGhost.setScared(false);
+                    yellowGhost.setScared(false);
+                    greenGhost.setScared(false);
+                    areScared = false;
+                    timeScared = 7.0f;
+                    //std::cout << "NOT SCARED" << std::endl;
+                }
+            }
+            if(pacmanDeadTime <= 0.0f)
+            {
+            player.Update(window, deltaTime, playerCounter); //update player
+            }
+            else
+            {
+                pacmanDeadTime -= deltaTime;
+            }
+            
+            if(redDeadTime <= 0.0f)
+            {  
+                redGhost.Update(window, deltaTime, ghostCounter, player.getPosition(), player.getMovement(), redGhost.getPosition());
+            }
+            else
+            {
+                redDeadTime -= deltaTime;
+            }
+
+            if(pinkDeadTime <= 0.0f)
+            {
+                pinkGhost.Update(window, deltaTime, ghostCounter, player.getPosition(), player.getMovement(), redGhost.getPosition());
+            }
+            else
+            {
+                pinkDeadTime -= deltaTime;
+            }
+
+            if(yellowDeadTime <= 0.0f)
+            {
+                yellowGhost.Update(window, deltaTime, ghostCounter, player.getPosition(), player.getMovement(), redGhost.getPosition());
+            }
+            else
+            {
+                yellowDeadTime -= deltaTime;
+            }
+
+            if(greenDeadTime <= 0.0f)
+            {
+                greenGhost.Update(window, deltaTime, ghostCounter, player.getPosition(), player.getMovement(), redGhost.getPosition());
+            }
+            else
+            {
+                greenDeadTime -= deltaTime;
+            }
+            
+            Collider playerCollider = player.getCollider();
+            Collider redGhostCollider = redGhost.getCollider();
+            Collider pinkGhostCollider = pinkGhost.getCollider();
+            Collider yellowGhostCollider = yellowGhost.getCollider();
+            Collider greenGhostCollider = greenGhost.getCollider();
+            for(int i=0;i<walls.size();i++)
+            {
+                walls[i].getCollider().checkCollision(playerCollider, 1.0f);
+                walls[i].getCollider().checkCollision(redGhostCollider, 1.0f);
+                walls[i].getCollider().checkCollision(pinkGhostCollider, 1.0f);
+                walls[i].getCollider().checkCollision(yellowGhostCollider, 1.0f);
+                walls[i].getCollider().checkCollision(greenGhostCollider, 1.0f);
+            }
+            if(playerCollider.checkCollision(redGhostCollider, 0.5f))
+            {
+                if(redGhost.getScared())
+                {
+                    scoreInt += 400;
+                }
+                else
+                {
+                    player.die();pacmanDeadTime = 4.0f;
+                    lives--;
+                    pinkGhost.die();pinkDeadTime = 4.0f;
+                    yellowGhost.die();yellowDeadTime = 4.0f;
+                    greenGhost.die();greenDeadTime = 4.0f;
+                }
+                redGhost.die();
+                redDeadTime = 4.0f;
+            }
+            if(playerCollider.checkCollision(pinkGhostCollider, 0.5f))
+            {
+                if(pinkGhost.getScared())
+                {
+                    scoreInt += 400;
+                }
+                else
+                {
+                    player.die();pacmanDeadTime = 4.0f;
+                    lives--;
+                    redGhost.die();redDeadTime = 4.0f;
+                    yellowGhost.die();yellowDeadTime = 4.0f;
+                    greenGhost.die();greenDeadTime = 4.0f;
+                }
+                pinkGhost.die();
+                pinkDeadTime = 4.0f;
+            }
+            if(playerCollider.checkCollision(yellowGhostCollider, 0.5f))
+            {
+                if(yellowGhost.getScared())
+                {
+                    scoreInt += 400;
+                }
+                else
+                {
+                    player.die();pacmanDeadTime = 4.0f;
+                    lives--;
+                    redGhost.die();redDeadTime = 4.0f;
+                    pinkGhost.die();pinkDeadTime = 4.0f;
+                    greenGhost.die();greenDeadTime = 4.0f;
+                }
+                yellowGhost.die();
+                yellowDeadTime = 4.0f;
+            }
+            if(playerCollider.checkCollision(greenGhostCollider, 0.5f))
+            {
+                if(greenGhost.getScared())
+                {
+                    scoreInt += 400;
+                }
+                else
+                {
+                    player.die();pacmanDeadTime = 4.0f;
+                    lives--;
+                    redGhost.die();redDeadTime = 4.0f;
+                    yellowGhost.die();yellowDeadTime = 4.0f;
+                    pinkGhost.die();pinkDeadTime = 4.0f;
+                }
+                greenGhost.die();
+                greenDeadTime = 4.0f;
+            }
+
+            for(int i=0;i<dots.size();i++)//update dots
+            { 
+                if(dots[i].getActive()==false)continue;
+                if(abs(player.getPosition().x - dots[i].getPosition().x)<(player.getSize().x/2.0f + dots[i].getSize().x/2.0f) && abs(player.getPosition().y - dots[i].getPosition().y)<(player.getSize().y/2.0f + dots[i].getSize().y/2.0f))
+                {
+                    dots[i].setActive(false);
+                    scoreInt+=dots[i].getPoints();
+                    if(dots[i].getBig())
+                    {
+                        redGhost.setScared(true);
+                        pinkGhost.setScared(true);
+                        yellowGhost.setScared(true);
+                        greenGhost.setScared(true);
+                        areScared = true;
+                        timeScared = 7.0f;
+                    }
+                }
+            }
+
+            std::string scoreString = "SCORE "; //update score
+            scoreString += std::to_string(scoreInt);
+            score.setString(scoreString);
+
+            std::string livesString = "LIVES "; //update lives
+            livesString += std::to_string(lives);
+            livesText.setString(livesString);
+        }
 
         window.clear();
         player.Draw(window);
         //std::cout << player.getPosition().x << " " << player.getPosition().y << std::endl;//
-        for(int i=0;i<walls.size();i++){
+        for(int i=0;i<walls.size();i++)
+        {
             walls[i].Draw(window);
         }
-        for(int i=0;i<dots.size();i++){
+        for(int i=0;i<dots.size();i++)
+        {
             if(dots[i].getActive())dots[i].Draw(window);
         }
         redGhost.Draw(window);
+        pinkGhost.Draw(window);
+        yellowGhost.Draw(window);
+        greenGhost.Draw(window);
         window.draw(score);
+        window.draw(livesText);
         window.display();
+        //std::cout << redGhost.getScared() << std::endl;
     }
 
     return 0;
@@ -149,14 +345,18 @@ int main()
 std::vector<Dot> setDots(sf::Texture* texture)
 {
     std::vector<Dot> v;
-    for(int x=0;x<WINDOW_WIDTH;x+=TILE_SIZE){
-        for(int y=0;y<WINDOW_HEIGHT;y+=TILE_SIZE){
-            if(grid[x/TILE_SIZE][y/TILE_SIZE]=='d'){
-                Dot temp((float)x+float(TILE_SIZE/2),(float)y+float(TILE_SIZE/2), texture, 7.0f, 10);
+    for(int x=0;x<WINDOW_WIDTH;x+=TILE_SIZE)
+    {
+        for(int y=0;y<WINDOW_HEIGHT;y+=TILE_SIZE)
+        {
+            if(grid[x/TILE_SIZE][y/TILE_SIZE]=='d')
+            {
+                Dot temp((float)x+float(TILE_SIZE/2),(float)y+float(TILE_SIZE/2), texture, false);
                 v.push_back(temp);
             }
-            if(grid[x/TILE_SIZE][y/TILE_SIZE]=='D'){
-                Dot temp((float)x+float(TILE_SIZE/2),(float)y+float(TILE_SIZE/2), texture, 28.0f, 50);
+            if(grid[x/TILE_SIZE][y/TILE_SIZE]=='D')
+            {
+                Dot temp((float)x+float(TILE_SIZE/2),(float)y+float(TILE_SIZE/2), texture, true);
                 v.push_back(temp);
             }
         }
@@ -169,9 +369,12 @@ std::vector<Wall> setWalls(sf::Texture* texture)
     std::vector<Wall> v;
 
     //unutrasnji zidovi
-    for(int x=0;x<WINDOW_WIDTH;x+=TILE_SIZE){
-        for(int y=0;y<WINDOW_HEIGHT;y+=TILE_SIZE){
-            if(grid[x/TILE_SIZE][y/TILE_SIZE]=='S'){
+    for(int x=0;x<WINDOW_WIDTH;x+=TILE_SIZE)
+    {
+        for(int y=0;y<WINDOW_HEIGHT;y+=TILE_SIZE)
+        {
+            if(grid[x/TILE_SIZE][y/TILE_SIZE]=='S')
+            {
                 sf::Vector2f size(0.0f, 0.0f), position;
                 for(int i=x+TILE_SIZE;grid[i/TILE_SIZE][y/TILE_SIZE]=='W' || grid[i/TILE_SIZE][y/TILE_SIZE]=='E';i+=TILE_SIZE)
                 {
@@ -235,15 +438,41 @@ std::vector<Wall> setWalls(sf::Texture* texture)
 void setGrids()
 {
     std::ifstream in("gridAll");
-    for(int y=0;y<WINDOW_HEIGHT/TILE_SIZE;y++){
-        for(int x=0;x<WINDOW_WIDTH/TILE_SIZE;x++){
+    for(int y=0;y<WINDOW_HEIGHT/TILE_SIZE;y++)
+    {
+        for(int x=0;x<WINDOW_WIDTH/TILE_SIZE;x++)
+        {
             in >> grid[x][y];
         }
     }
     std::ifstream in2("boolGrid");
-    for(int y=0;y<36;y++){
-        for(int x=0;x<28;x++){
+    for(int y=0;y<36;y++)
+    {
+        for(int x=0;x<28;x++)
+        {
             in2 >> boolGrid[x][y];
         }
+    }
+    std::ifstream in3("boolGridGhosts");
+    for(int y=0;y<36;y++)
+    {
+        for(int x=0;x<28;x++)
+        {
+            in3 >> boolGridGhosts[x][y];
+        }
+    }
+}
+
+void reset(Player& player, Ghost& red, Ghost& pink, Ghost& yellow, Ghost& green, std::vector<Dot>& dots, float& pDTime, float& rDTime, float& piDTime, float& yDTime, float& gDTime)
+{
+    player.die();pDTime = 4.0f;
+    red.die();rDTime = 4.0f;
+    yellow.die();yDTime = 4.0f;
+    pink.die();piDTime = 4.0f;
+    green.die();gDTime = 4.0f;
+
+    for(int i=0;i < dots.size();i++)
+    {
+        dots[i].setActive(true);
     }
 }
